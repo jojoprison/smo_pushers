@@ -1,6 +1,9 @@
 from smo.simulation import Simulation
 from tkinter import *
 from tkinter import ttk
+import smo.events_flow as flow
+from pandastable import Table
+import smo.data as data
 
 
 class Interface:
@@ -85,13 +88,31 @@ class Interface:
             sim.pushing_price = int(pushing_price_txt.get())
             sim.time_step = float(time_step_txt.get())
 
-            print(self.simulation)
+            # генерируем поток случайных событий
+            events = flow.flow_init(int(intensity_txt.get()), int(flow_time_txt.get()))
+
+            num_of_pushers = int(pushers_txt.get())
+            result_list = [{'cost': 0., 'clock': 0.} for _ in range(1, num_of_pushers + 1)]
+
+            for pushers_inx in range(1, num_of_pushers + 1):
+                sim.cost = 0.
+                sim.clock = 0.
+                sim.run(events, pushers_inx)
+
+                result = result_list[pushers_inx - 1]
+                result['cost'] = sim.cost
+                result['clock'] = sim.clock
+
+            dataframe = data.get_data(result_list, num_of_pushers)
+
+            new_window = Toplevel(root)
+            frame = Frame(new_window)
+            frame.pack(fill='both', expand=True)
+
+            pt = Table(frame, dataframe=dataframe)
+            pt.show()
 
         btn = Button(root, text="Симулировать", command=btn_click)
         btn.grid(column=2, row=3)
 
         root.mainloop()
-
-
-interface_ = Interface()
-interface_.main()

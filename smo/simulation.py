@@ -10,7 +10,7 @@ class Simulation:
         # затраты при толкании (руб/час)
         self.pushing_price = 30
         # общая сумма затрат
-        self.cost = 0
+        self.cost = 0.
 
         # число вагонов в составе одного поезда (одинаковое для всех поездов)
         self.num_of_carriages = 6
