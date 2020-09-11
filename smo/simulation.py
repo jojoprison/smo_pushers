@@ -2,106 +2,180 @@ from operator import itemgetter
 
 
 class Simulation:
+    """
+    Имитационная модель СМО
+
+    Attributes:
+        carriage_downtime_price (int):
+            Затраты при простое одного вагона (руб/час)
+        pusher_downtime_price (int):
+            Затраты при простое толкача (руб/час)
+        pushing_price (int):
+            Затраты при толкании (руб/час)
+        cost (float):
+            Общая сумма затрат
+        num_of_carriages (int):
+            Число вагонов в составе одного поезда (одинаковое для всех поездов)
+        t_pushing (int):
+            Время толкания поезда
+        t_hitch_detach (int):
+            Время прицепа-отцепа толкача
+        t_to_depot (int):
+            Время движения толкача от начала участка толкания до депо
+            (для прохождения ТО) туда и обратно, едет со старта
+        t_return (int):
+            Время возврата толкача к началу участка толкания
+            (после толкания на старт)
+        deterioration_percentage (float):
+            Процент износа толкача после совершения действия
+        service_time (int):
+            Время Технического обслуживания (ТО) толкача
+        pushers (list of dict):
+            Толкачи
+        trains_in_queue (set):
+            Поезда в очереди на толкание
+        clock (float):
+            Имитация часов
+        time_step (float):
+            Шаг времени изменения симуляции
+    """
+
     def __init__(self):
-        # затраты при простое одного вагона (руб/час)
+        """Инициализирует объект симуляции с параметрами по умолчанию"""
+
         self.carriage_downtime_price = 60
-        # затраты при простое толкача (руб/час)
         self.pusher_downtime_price = 120
-        # затраты при толкании (руб/час)
         self.pushing_price = 30
-        # общая сумма затрат
         self.cost = 0.
 
-        # число вагонов в составе одного поезда (одинаковое для всех поездов)
         self.num_of_carriages = 6
 
-        # время толкания (засунуть в функцию и будет увеличиваться)
-        # 2 часа - туда, 1 час - обратно
         self.t_pushing = 2
-        # время прицепа-отцепа толкача
         self.t_hitch_detach = 0.25
-        # время движения толкача от начала участка толкания до депо (для прохождения ТО)
-        # туда и обратно, едет от старта
         self.t_to_depot = 2
-        # время возврата толкача к началу участка толкания (после толкания на старт)
         self.t_return = 1
-        # процент износа толкача
         self.deterioration_percentage = 1.05
-        # Техническое обслуживание (ТО)
         self.service_time = 3
 
-        # толкачи
         self.pushers = None
-        # поезда в очереди на толкание
         self.trains_in_queue = set()
 
-        # имитация часов симуляции
         self.clock = 0.0
-        # шаг времени симуляции (15 минут)
         self.time_step = 1 / 4
 
-    def run(self, events, num_of_pushers):
-        # наработка толкача между техническим обслуживанием (час, только время толкания)
-        # t_in_action = 0
-        # износ
-        # deterioration = 1
-        # число толкачей
-        # num_of_pushers = 2
+    def simulate(self, events, num_of_pushers):
+        """
+        Симулирует процесс подхода поездов и их толкания
 
+        Args:
+            events (list of float):
+                Список, содержащий время прихода поездов
+            num_of_pushers (int):
+                Количество использующихся толкачей
+        """
+
+        # создаем список толкачей в виде словарей с параметрами:
+        # busy: занят ли толкач
+        # action_time: время активной деятельности толкача (в часах)
+        # deterioration: износ толкача
         self.pushers = [{'busy': False, 'action_time': 0., 'deterioration': 1., 'finish_time': 0.}
                         for _ in range(num_of_pushers)]
-        # print("Init: ", self.pushers)
 
+        # для каждого отдельного прибытия поезда
         for event_time in events:
+            # пока текущее время симуляции меньше времени прибытия поезда
             while self.clock < event_time:
+                # симулируем протекание времени
                 self.live()
 
+            # пытаемся толкнуть текущий поезд
             self.push(event_time)
 
+        # время окончания всех действий толкачей
         pushers_finish_time = []
         for pusher in self.pushers:
+            # засовываем время в список
             pushers_finish_time.append(pusher['finish_time'])
 
+        # пока текущее время меньше максимального времени окончания среди толкачей
         while self.clock < (max(enumerate(pushers_finish_time), key=itemgetter(1))[1]):
+            # симулируем протекание времени
             self.live()
 
     def live(self):
-        # симулируем 15 минут времени
+        """Симулирует процесс протекания времени в симуляции"""
+
+        # симулируем протекание времени
         self.clock += self.time_step
 
-        # сообщаем, что толкачи свободны (БЕГИТЕ РАБЫ, ВАС ОСВОБОДИЛИ!!!)
+        # ищем свободный толкач
         for pusher in self.pushers:
+            # если толкач занят
             if pusher['busy']:
+                # к общим затратам прибавляем стоимость толкания
+                # за единицу времени
                 self.cost += self.pushing_price * self.time_step
+            # если нет
             else:
+                # к общим затратам прибавляем стоимость простоя толкача
+                # за единицу времени
                 self.cost += self.pusher_downtime_price * self.time_step
 
+            # если текущее время больше времени окончания работы толкача
             if self.clock >= pusher['finish_time']:
+                # освобождаем толкач
                 pusher['busy'] = False
 
-        self.cost += len(self.trains_in_queue) * self.carriage_downtime_price * self.num_of_carriages
+        # к общим затратам прибавляем стоимость простоя поезда с заданным
+        # кол-вом вагонов, умноженную на кол-во поездов в ожидании толкания
+        # за единицу времени
+        self.cost += len(self.trains_in_queue) * self.carriage_downtime_price \
+                     * self.num_of_carriages * self.time_step
 
     def service(self, pusher_index):
+        """
+        Техническое обслуживание (ТО) толкача
+
+        Args:
+            pusher_index (int):
+                Индекс толкача, требующего техническое обслуживание
+        """
+
+        # выбираем толкач из списка по индексу
         pusher = self.pushers[pusher_index]
+        # толкач занят
         pusher['busy'] = True
+        # сбрасываем время работы
         pusher['action_time'] = 0
+        # указываем время окончания, учитывая износ толкача, время возврата
+        # на станцию толкания и время ТО
         pusher['finish_time'] = self.clock + (self.t_to_depot * pusher['deterioration']) \
                                 + self.service_time
+        # сбрасываем износ толкача
         pusher['deterioration'] = 1.
 
     def push(self, event_time):
+        """
+        Симулирует толкание поезда
 
-        # будем выбирать наименее изношенный толкач
+        Args:
+            event_time (float):
+                Времени прибытия поезда
+        """
+
+        # TODO будем выбирать наименее изношенный толкач
         deters = []
 
+        # бесконечный цикл, будем выходить из него с помощью return
         while True:
+            # берем индекс толкача в списке и сам объект толкача
             for index, pusher in enumerate(self.pushers):
+                # поочередно ищем свободный толкач
                 if not pusher['busy']:
-
-                    # износ
+                    # износ запихиваем в переменную
                     pusher_deterioration = pusher['deterioration']
 
-                    # считаем время будущей работы
+                    # считаем время предстоящей работы
                     action_time = (self.t_hitch_detach + self.t_pushing + self.t_return) \
                                   * pusher_deterioration
                     # время пути до депо
@@ -110,18 +184,25 @@ class Simulation:
                     # если время работы превысит 72 часа, отправляем на ТО
                     if pusher['action_time'] + action_time + time_to_depot >= 72:
                         self.service(index)
+                        # итерация в цикле на следующий толкач
                         continue
 
+                    # толкач становится занятым
                     pusher['busy'] = True
+                    # увеличиваем время работы
                     pusher['action_time'] += action_time
+                    # увеличиваем износ
                     pusher['deterioration'] *= self.deterioration_percentage
+                    # обновляем время окончания работ
                     pusher['finish_time'] = self.clock + action_time
 
+                    # удаляем поезд и очереди на толкание
                     self.trains_in_queue.discard(event_time)
 
+                    # выходим из метода
                     return
 
-                # deters.append(pusher['deterioration'])
+                # TODO deters.append(pusher['deterioration'])
 
             # if deters:
             #     # min_deter = min(deters)
@@ -129,6 +210,8 @@ class Simulation:
             #     print(min_deter)
             #     print(type(min_deter))
 
+            # добавляем поезд в очередь на толкание
             self.trains_in_queue.add(event_time)
 
+            # симулируем протекание времени
             self.live()

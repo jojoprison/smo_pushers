@@ -97,7 +97,7 @@ class Interface:
             for pushers_inx in range(1, num_of_pushers + 1):
                 sim.cost = 0.
                 sim.clock = 0.
-                sim.run(events, pushers_inx)
+                sim.simulate(events, pushers_inx)
 
                 result = result_list[pushers_inx - 1]
                 result['cost'] = sim.cost
