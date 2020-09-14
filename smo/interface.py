@@ -13,9 +13,9 @@ class Interface:
         self.intensity = 8
         self.pushers_max = 10
 
-    def main(self):
+    def main(self, window):
 
-        root = Tk()
+        root = window
         root.title("СМО Толкачи")
 
         # Выравниваем окно по центру экрана
@@ -23,8 +23,8 @@ class Interface:
         h = 100
         ws = root.winfo_screenwidth()
         hs = root.winfo_screenheight()
-        x = (ws / 2) - (w / 2)
-        y = (hs / 2) - (h / 2)
+        x = (ws / 2) - (w / 2) + 30
+        y = (hs / 2) - (h / 2) + 30
         root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
         flow_time_lbl = ttk.Label(root, text='Время наблюдения:')
@@ -111,6 +111,20 @@ class Interface:
 
             pt = Table(frame, dataframe=dataframe)
             pt.show()
+
+            best = dataframe.min()
+
+            res_str = 'ЛУЧШИЙ ТОЛКАЧ:\n' + str(best)
+
+            # TODO обрезать последнюю строку
+
+            # mass_res = stra.splitlines()
+            # res_str = ''
+
+            # res_str = res_str.join(mass_res)
+
+            result_lbl = ttk.Label(frame, text=res_str)
+            result_lbl.grid(column=1)
 
         btn = Button(root, text="Симулировать", command=btn_click)
         btn.grid(column=2, row=3)

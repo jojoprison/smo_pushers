@@ -1,6 +1,8 @@
 from pusher_selection.depot import Depot
 from pusher_selection.pusher import Pusher
 
+# execfile('pusher_selection/main.py')
+
 broken_pusher = Pusher()
 broken_pusher.t_until_service = 70.
 broken_pusher.type = 'aaa'

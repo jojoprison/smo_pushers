@@ -16,7 +16,7 @@ class Depot:
         suitable_pushers = [{'index': None, 'remoteness': 0., 't_until_service': 0.} for _ in range(len(self.pushers))]
 
         for pusher_idx, pusher in enumerate(self.pushers):
-            if pusher.employment and broken_pusher.type == pusher.type and broken_pusher.power <= pusher.power:
+            if not pusher.employment and broken_pusher.type == pusher.type and broken_pusher.power <= pusher.power:
                 suitable_pushers[pusher_idx]['index'] = pusher_idx
                 suitable_pushers[pusher_idx]['remoteness'] = pusher.remoteness
                 suitable_pushers[pusher_idx]['t_until_service'] = pusher.t_until_service

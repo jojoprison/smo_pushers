@@ -10,6 +10,6 @@ def get_data(result_list, num_of_pushers):
 
         df = df.append(row, ignore_index=True)
 
-    df.to_excel('SMO_result.xlsx')
+    df.to_excel('./smo/SMO_result.xlsx')
     print("data received")
     return df
