@@ -19,8 +19,8 @@ class Interface:
         root.title("СМО Толкачи")
 
         # Выравниваем окно по центру экрана
-        w = 600
-        h = 100
+        w = 1000
+        h = 200
         ws = root.winfo_screenwidth()
         hs = root.winfo_screenheight()
         x = (ws / 2) - (w / 2) + 30
@@ -28,15 +28,19 @@ class Interface:
         root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
         flow_time_lbl = ttk.Label(root, text='Время наблюдения:')
+        flow_time_lbl.configure(font=0.0001)
         flow_time_lbl.grid()
 
         flow_time_txt = Entry(root, width=7, text=IntVar(value=self.flow_time))
+        flow_time_txt.configure(font=1)
         flow_time_txt.grid(column=1, row=0)
 
         intensity_lbl = ttk.Label(root, text='Интенсивность потока:')
+        intensity_lbl.configure(font=1)
         intensity_lbl.grid(column=2, row=0)
 
         intensity_txt = Entry(root, width=7, text=IntVar(value=self.intensity))
+        intensity_txt.configure(font=1)
         intensity_txt.grid(column=3, row=0)
 
         pushers_lbl = ttk.Label(root, text='Макс. кол-во толкачей:')

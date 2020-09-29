@@ -2,6 +2,7 @@ import smo.interface as smo
 import pusher_selection.interface as pusher_selection
 from tkinter import *
 
+# Место запуска программы. Обращаемся к интерфейсу обеих задач
 # execfile('main.py')
 
 root = Tk()
