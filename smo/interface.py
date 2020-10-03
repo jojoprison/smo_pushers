@@ -23,11 +23,11 @@ class Interface:
         h = 200
         ws = root.winfo_screenwidth()
         hs = root.winfo_screenheight()
-        x = (ws / 2) - (w / 2) + 30
-        y = (hs / 2) - (h / 2) + 30
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
         root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
-        flow_time_lbl = ttk.Label(root, text='Время наблюдения:')
+        flow_time_lbl = ttk.Label(root, text='Время наблюдения (в часах):')
         flow_time_lbl.configure(font=0.0001)
         flow_time_lbl.grid()
 
@@ -35,7 +35,7 @@ class Interface:
         flow_time_txt.configure(font=1)
         flow_time_txt.grid(column=1, row=0)
 
-        intensity_lbl = ttk.Label(root, text='Интенсивность потока:')
+        intensity_lbl = ttk.Label(root, text='Интенсивность потока (ед./24 часа):')
         intensity_lbl.configure(font=1)
         intensity_lbl.grid(column=2, row=0)
 
@@ -44,44 +44,56 @@ class Interface:
         intensity_txt.grid(column=3, row=0)
 
         pushers_lbl = ttk.Label(root, text='Макс. кол-во толкачей:')
+        pushers_lbl.configure(font=1)
         pushers_lbl.grid(column=4, row=0)
 
         pushers_txt = Entry(root, width=7, text=IntVar(value=self.pushers_max))
+        pushers_txt.configure(font=1)
         pushers_txt.grid(column=5, row=0)
 
         carriages_lbl = ttk.Label(root, text='Число вагонов:')
+        carriages_lbl.configure(font=1)
         carriages_lbl.grid(column=0, row=1)
 
         carriages_txt = Entry(root, width=7,
                               text=IntVar(value=self.simulation.num_of_carriages))
+        carriages_txt.configure(font=1)
         carriages_txt.grid(column=1, row=1)
 
-        carriage_price_lbl = ttk.Label(root, text='Стоимость простоя вагона:')
+        carriage_price_lbl = ttk.Label(root, text='Стоимость простоя вагона (руб/час):')
+        carriage_price_lbl.configure(font=1)
         carriage_price_lbl.grid(column=2, row=1)
 
         carriage_price_txt = Entry(root, width=7,
                                    text=IntVar(value=self.simulation.carriage_downtime_price))
+        carriage_price_txt.configure(font=1)
         carriage_price_txt.grid(column=3, row=1)
 
-        pusher_price_lbl = ttk.Label(root, text='Стоимость простоя толкача:')
+        pusher_price_lbl = ttk.Label(root, text='Стоимость простоя толкача (руб/час):')
+        pusher_price_lbl.configure(font=1)
         pusher_price_lbl.grid(column=4, row=1)
 
         pusher_price_txt = Entry(root, width=7,
                                  text=IntVar(value=self.simulation.pusher_downtime_price))
+        pusher_price_txt.configure(font=1)
         pusher_price_txt.grid(column=5, row=1)
 
-        pushing_price_lbl = ttk.Label(root, text='Стоимость толкания:')
+        pushing_price_lbl = ttk.Label(root, text='Стоимость толкания (руб/час):')
+        pushing_price_lbl.configure(font=1)
         pushing_price_lbl.grid(column=0, row=2)
 
         pushing_price_txt = Entry(root, width=7,
                                   text=IntVar(value=self.simulation.pushing_price))
+        pushing_price_txt.configure(font=1)
         pushing_price_txt.grid(column=1, row=2)
 
-        time_step_lbl = ttk.Label(root, text='Шаг симуляции:')
+        time_step_lbl = ttk.Label(root, text='Шаг симуляции (в часах):')
+        time_step_lbl.configure(font=1)
         time_step_lbl.grid(column=2, row=2)
 
         time_step_txt = Entry(root, width=7,
                               text=IntVar(value=self.simulation.time_step))
+        time_step_txt.configure(font=1)
         time_step_txt.grid(column=3, row=2)
 
         def btn_click():
@@ -128,9 +140,11 @@ class Interface:
             # res_str = res_str.join(mass_res)
 
             result_lbl = ttk.Label(frame, text=res_str)
+            result_lbl.configure(font=1)
             result_lbl.grid(column=1)
 
         btn = Button(root, text="Симулировать", command=btn_click)
+        btn.configure(font=1)
         btn.grid(column=2, row=3)
 
         root.mainloop()

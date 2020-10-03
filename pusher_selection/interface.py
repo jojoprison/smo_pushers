@@ -35,42 +35,52 @@ class Interface:
         root.title("Замена толкача")
 
         # Выравниваем окно по центру экрана
-        w = 600
-        h = 100
+        w = 1000
+        h = 200
         ws = root.winfo_screenwidth()
         hs = root.winfo_screenheight()
-        x = (ws / 2) - (w / 2) + 30
-        y = (hs / 2) - (h / 2) + 30
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
         root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
         self.simulate_pusher()
 
         type_lbl = ttk.Label(root, text='Тип толкача:')
+        type_lbl.configure(font=1)
         type_lbl.grid(column=0, row=0)
         type_txt = Entry(root, width=7, text=IntVar(value=self.broken_pusher.type))
+        type_txt.configure(font=1)
         type_txt.grid(column=1, row=0)
 
         power_lbl = ttk.Label(root, text='Мощность толкача:')
         power_lbl.grid(column=2, row=0)
+        power_lbl.configure(font=1)
         power_txt = Entry(root, width=7,
                           text=IntVar(value=self.broken_pusher.power))
+        power_txt.configure(font=1)
         power_txt.grid(column=3, row=0)
 
-        t_until_service_lbl = ttk.Label(root, text='Время до ТО:')
+        t_until_service_lbl = ttk.Label(root, text='Время до ТО (в часах):')
         t_until_service_lbl.grid(column=4, row=0)
+        t_until_service_lbl.configure(font=1)
         t_until_service_txt = Entry(root, width=7,
                                     text=IntVar(value=self.broken_pusher.t_until_service))
+        t_until_service_txt.configure(font=1)
         t_until_service_txt.grid(column=5, row=0)
 
-        remoteness_lbl = ttk.Label(root, text='Удаленность от точки толкания:')
+        remoteness_lbl = ttk.Label(root, text='Удаленность от точки толкания (в км):')
         remoteness_lbl.grid(column=0, row=1)
+        remoteness_lbl.configure(font=1)
         remoteness_txt = Entry(root, width=7, text=IntVar(value=self.broken_pusher.remoteness))
+        remoteness_txt.configure(font=1)
         remoteness_txt.grid(column=1, row=1)
 
-        employment_lbl = ttk.Label(root, text='Занятость толкача:')
+        employment_lbl = ttk.Label(root, text='Занятость толкача (истинность):')
         employment_lbl.grid(column=2, row=1)
+        employment_lbl.configure(font=1)
         employment_txt = Entry(root, width=7,
                                text=IntVar(value=self.broken_pusher.employment))
+        employment_txt.configure(font=1)
         employment_txt.grid(column=3, row=1)
 
         def btn_click():
@@ -93,6 +103,7 @@ class Interface:
             pt.show()
 
         btn = Button(root, text="Заменить толкач", command=btn_click)
+        btn.configure(font=1)
         btn.grid(column=2, row=3)
 
         root.mainloop()
