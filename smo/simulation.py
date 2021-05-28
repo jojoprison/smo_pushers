@@ -56,12 +56,14 @@ class Simulation:
         self.t_return = 1
         self.deterioration_percentage = 1.05
         self.service_time = 3
+        self.downtime_average = 0.
 
+        self.num_of_pushers = None
         self.pushers = None
         self.trains_in_queue = set()
 
         self.clock = 0.0
-        self.time_step = 1 / 4
+        self.time_step = 0.25
 
     def simulate(self, events, num_of_pushers):
         """
@@ -74,12 +76,16 @@ class Simulation:
                 Количество использующихся толкачей
         """
 
+        self.num_of_pushers = num_of_pushers
+
         # создаем список толкачей в виде словарей с параметрами:
         # busy: занят ли толкач
-        # action_time: время активной деятельности толкача (в часах)
-        # deterioration: износ толкача
-        self.pushers = [{'busy': False, 'action_time': 0., 'deterioration': 1., 'finish_time': 0.}
-                        for _ in range(num_of_pushers)]
+        # action_time: время активной деятельности толкача (часы)
+        # finish_time: время окончания толкания (часы)
+        # downtime: время простоя (часы)
+        # deterioration: износ толкача (дробное число в виде 1.05, 1.1 - процентное отношение)
+        self.pushers = [{'busy': False, 'action_time': 0., 'finish_time': 0., 'downtime': 0.,
+                         'deterioration': 1.} for _ in range(self.num_of_pushers)]
 
         # для каждого отдельного прибытия поезда
         for event_time in events:
@@ -108,6 +114,8 @@ class Simulation:
         # симулируем протекание времени
         self.clock += self.time_step
 
+        downtime_list = []
+
         # ищем свободный толкач
         for pusher in self.pushers:
             # если толкач занят
@@ -115,16 +123,28 @@ class Simulation:
                 # к общим затратам прибавляем стоимость толкания
                 # за единицу времени
                 self.cost += self.pushing_price * self.time_step
-            # если нет
+                # сбрасываем время простоя толкача
+                pusher['downtime'] = 0.
             else:
                 # к общим затратам прибавляем стоимость простоя толкача
                 # за единицу времени
                 self.cost += self.pusher_downtime_price * self.time_step
 
+                # записываем, сколько простаивает толкач
+                pusher['downtime'] += self.time_step
+                # добавляем время простоя каждого толкача в общий список для подсчета среднего времени простоя
+                downtime_list.append(pusher['downtime'])
+
             # если текущее время больше времени окончания работы толкача
             if self.clock >= pusher['finish_time']:
                 # освобождаем толкач
                 pusher['busy'] = False
+
+        # сумма времен простоя всех толкачей
+        downtime_sum = sum(downtime for downtime in downtime_list)
+        # вычисляем среднее время простоя толкачей
+        self.downtime_average = downtime_sum / self.num_of_pushers
+        print('downtime_average: ', self.downtime_average)
 
         # к общим затратам прибавляем стоимость простоя поезда с заданным
         # кол-вом вагонов, умноженную на кол-во поездов в ожидании толкания
@@ -175,7 +195,9 @@ class Simulation:
                     # износ запихиваем в переменную
                     pusher_deterioration = pusher['deterioration']
 
+                    # TODO засунуть метод монтекарло сюда, чтобы сделать время толкания случайным в заданном диапазоне
                     # считаем время предстоящей работы
+                    # TODO здесь будем плюсовать весь общий путь с учетом износа - это будет нижняя граница интервала
                     action_time = (self.t_hitch_detach + self.t_pushing + self.t_return) \
                                   * pusher_deterioration
                     # время пути до депо

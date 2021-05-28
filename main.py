@@ -37,11 +37,11 @@ mode_lbl = Label(root, text='Режим работы программы:')
 mode_lbl.configure(font=1)
 mode_lbl.pack()
 
-smo_btn = Button(root, text="СМО", command=smo_btn_click)
+smo_btn = Button(root, text='СМО', command=smo_btn_click)
 smo_btn.configure(font=1)
 smo_btn.pack()
 
-ps_btn = Button(root, text="Замена толкача", command=ps_btn_click)
+ps_btn = Button(root, text='Замена толкача', command=ps_btn_click)
 ps_btn.configure(font=1)
 ps_btn.pack()
 

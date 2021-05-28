@@ -3,6 +3,7 @@ import random
 
 
 class Depot:
+    # TODO написать комменты
     def __init__(self):
         self.hue = 1
         self.pushers = []
@@ -36,13 +37,14 @@ class Depot:
 
         min_ = min(pshrs_remoteness)
 
-        replacable_pusher_idx = None
+        replaceable_pusher_idx = None
 
         for pshr in res:
             if pshr['remoteness'] == min_:
-                replacable_pusher_idx = pshr['index']
+                replaceable_pusher_idx = pshr['index']
+                break
 
-        h = self.pushers[replacable_pusher_idx]
-        self.pushers[replacable_pusher_idx] = broken_pusher
+        h = self.pushers[replaceable_pusher_idx]
+        self.pushers[replaceable_pusher_idx] = broken_pusher
 
         return h

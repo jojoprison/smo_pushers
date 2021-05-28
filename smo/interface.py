@@ -87,14 +87,28 @@ class Interface:
         pushing_price_txt.configure(font=1)
         pushing_price_txt.grid(column=1, row=2)
 
-        time_step_lbl = ttk.Label(root, text='Шаг симуляции (в часах):')
-        time_step_lbl.configure(font=1)
-        time_step_lbl.grid(column=2, row=2)
+        # # шаг симуляции
+        # time_step_lbl = ttk.Label(root, text='Шаг симуляции (в часах):')
+        # time_step_lbl.configure(font=1)
+        # time_step_lbl.grid(column=2, row=2)
+        #
+        # time_step_txt = Entry(root, width=7,
+        #                       text=IntVar(value=self.simulation.time_step))
+        # time_step_txt.configure(font=1)
+        # time_step_txt.grid(column=3, row=2)
 
-        time_step_txt = Entry(root, width=7,
-                              text=IntVar(value=self.simulation.time_step))
-        time_step_txt.configure(font=1)
-        time_step_txt.grid(column=3, row=2)
+        analytic_func_lbl = ttk.Label(root, text='Аналитическая функция времени:')
+        analytic_func_lbl.configure(font=1)
+        analytic_func_lbl.grid(column=2, row=2)
+
+        # значения для выбора аналитической функции
+        analytic_func_var = StringVar(root)
+        analytic_func_var.set('Метод Монте-Карло')
+
+        # выбор аналитической функции
+        analytic_func_option = OptionMenu(root, analytic_func_var, 'Метод Монте-Карло')
+        analytic_func_option.configure(font=1)
+        analytic_func_option.grid(column=3, row=2)
 
         def btn_click():
             sim = Simulation()
@@ -102,7 +116,8 @@ class Interface:
             sim.carriage_downtime_price = int(carriage_price_txt.get())
             sim.pusher_downtime_price = int(pusher_price_txt.get())
             sim.pushing_price = int(pushing_price_txt.get())
-            sim.time_step = float(time_step_txt.get())
+            # шаги симуляции теперь задаем статическим внутри класса и скроем ее с интерфейса
+            # sim.time_step = float(time_step_txt.get())
 
             # генерируем поток случайных событий
             events = flow.flow_init(int(intensity_txt.get()), int(flow_time_txt.get()))
@@ -128,16 +143,30 @@ class Interface:
             pt = Table(frame, dataframe=dataframe)
             pt.show()
 
-            best = dataframe.min()
+            # получаем индекс строки с толкачей минимальными затратами
+            best_res_idx = dataframe['Суммарные затраты (руб)'].idxmin()
 
-            res_str = 'ЛУЧШИЙ ТОЛКАЧ:\n' + str(best)
+            best_res = dataframe.iloc[[best_res_idx]]
 
-            # TODO обрезать последнюю строку
+            # TODO можно переделать вид вывозда лучшего результата, чтобы был в столбик
+            # headers = list(best_res.columns.values)
+            # print(headers)
+            # print(best_res.get_values())
 
-            # mass_res = stra.splitlines()
-            # res_str = ''
+            # lol = best_res.to_csv(index=False).strip('\n').split('\n')
+            # df_string = '\r\n'.join(lol)  # <= this is the string that you can use with md5
+            # print(df_string)
 
-            # res_str = res_str.join(mass_res)
+            # lol = best_res.to_csv(index=False, sep='\n')
+            # print(type(lol))
+
+            best_res = best_res.to_string(index=False)
+
+            # df_bytes = df_string.encode('utf8')  # <= this is bytes object to write the file
+            # print(df_bytes)
+            # print(best_res.to_string(index=False))
+
+            res_str = 'ЛУЧШИЙ РЕЗУЛЬТАТ:\n' + best_res
 
             result_lbl = ttk.Label(frame, text=res_str)
             result_lbl.configure(font=1)
