@@ -18,12 +18,13 @@ def build_downtime_graph(downtime_average_list):
 
 def print_graph(parent_window, downtime_average_list, time_list):
 
-    figure = Figure(figsize=(8, 6), dpi=100)
+    figure = Figure(figsize=(7, 5), dpi=100)
     subplot = figure.add_subplot(111)
 
     # build_downtime_graph(downtime_average_list)
 
-    subplot.plot(time_list, downtime_average_list)
+    subplot.plot(time_list, downtime_average_list, label='Время простоя', lw=1)
+    # print(downtime_average_list)
     # plt.plot(x, y1, 'o-r', label="first", lw=5, mec='b', mew=2, ms=10)
     # plt.plot(x, y2, 'v-.g', label="second", mec='r', lw=2, mew=2, ms=12)
     subplot.legend()

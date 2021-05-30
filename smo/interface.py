@@ -180,9 +180,6 @@ class Interface:
                 list_max.pop()
                 len_max = len(list_max)
 
-            print(len(best_downtime_average_list))
-            print(len(time_list))
-
             # рисуем график функции простоя от времени симуляции
             print_graph(frame, best_downtime_average_list, time_list)
 
