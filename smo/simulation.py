@@ -56,7 +56,7 @@ class Simulation:
         self.t_return = 1
         self.deterioration_percentage = 1.05
         self.service_time = 3
-        self.downtime_average = 0.
+        self.downtime_average_list = []
 
         self.num_of_pushers = None
         self.pushers = None
@@ -142,9 +142,8 @@ class Simulation:
 
         # сумма времен простоя всех толкачей
         downtime_sum = sum(downtime for downtime in downtime_list)
-        # вычисляем среднее время простоя толкачей
-        self.downtime_average = downtime_sum / self.num_of_pushers
-        print('downtime_average: ', self.downtime_average)
+        # вычисляем среднее время простоя толкачей и заносим в список для графика
+        self.downtime_average_list.append(downtime_sum / self.num_of_pushers)
 
         # к общим затратам прибавляем стоимость простоя поезда с заданным
         # кол-вом вагонов, умноженную на кол-во поездов в ожидании толкания

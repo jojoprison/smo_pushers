@@ -1,9 +1,13 @@
 from smo.simulation import Simulation
 from tkinter import *
+import tkinter as tk
 from tkinter import ttk
 import smo.events_flow as flow
 from pandastable import Table
 import smo.data as data
+from smo.graph import build_downtime_graph
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
 
 
 class Interface:
@@ -123,7 +127,8 @@ class Interface:
             events = flow.flow_init(int(intensity_txt.get()), int(flow_time_txt.get()))
 
             num_of_pushers = int(pushers_txt.get())
-            result_list = [{'cost': 0., 'clock': 0.} for _ in range(1, num_of_pushers + 1)]
+            result_list = [{'cost': 0., 'clock': 0., 'downtime_average': 0.}
+                           for _ in range(1, num_of_pushers + 1)]
 
             for pushers_inx in range(1, num_of_pushers + 1):
                 sim.cost = 0.
@@ -133,6 +138,7 @@ class Interface:
                 result = result_list[pushers_inx - 1]
                 result['cost'] = sim.cost
                 result['clock'] = sim.clock
+                result['downtime_average_list'] = sim.downtime_average_list
 
             dataframe = data.get_data(result_list, num_of_pushers)
 
@@ -146,7 +152,23 @@ class Interface:
             # получаем индекс строки с толкачей минимальными затратами
             best_res_idx = dataframe['Суммарные затраты (руб)'].idxmin()
 
+            # выбираем строку из таблицы с лучшими результатами
             best_res = dataframe.iloc[[best_res_idx]]
+
+            f = Figure(figsize=(5, 5), dpi=100)
+            a = f.add_subplot(111)
+            best_downtime_average_list = result_list[best_res_idx]['downtime_average_list']
+            # build_downtime_graph(best_downtime_average_list).show()
+            a.plot(best_downtime_average_list)
+
+            canvas = FigureCanvasTkAgg(f, self)
+            # canvas.show()
+            canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+            toolbar = NavigationToolbar2Tk(canvas, self)
+            toolbar.update()
+
+            canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
             # TODO можно переделать вид вывозда лучшего результата, чтобы был в столбик
             # headers = list(best_res.columns.values)
