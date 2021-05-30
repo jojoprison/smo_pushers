@@ -1,3 +1,5 @@
+import matplotlib
+
 from smo.simulation import Simulation
 from tkinter import *
 import tkinter as tk
@@ -5,9 +7,11 @@ from tkinter import ttk
 import smo.events_flow as flow
 from pandastable import Table
 import smo.data as data
-from smo.graph import build_downtime_graph
+from smo.graph import build_downtime_graph, print_graph
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
+
+matplotlib.use("TkAgg")
 
 
 class Interface:
@@ -131,8 +135,9 @@ class Interface:
                            for _ in range(1, num_of_pushers + 1)]
 
             for pushers_inx in range(1, num_of_pushers + 1):
-                sim.cost = 0.
-                sim.clock = 0.
+                # обновляем данные времени, общих затрат и массива времени простоя для симулиции
+                sim.reset_sim()
+                # симулируем относительно пуассоновского потока событий и количества толкачей
                 sim.simulate(events, pushers_inx)
 
                 result = result_list[pushers_inx - 1]
@@ -154,21 +159,32 @@ class Interface:
 
             # выбираем строку из таблицы с лучшими результатами
             best_res = dataframe.iloc[[best_res_idx]]
-
-            f = Figure(figsize=(5, 5), dpi=100)
-            a = f.add_subplot(111)
             best_downtime_average_list = result_list[best_res_idx]['downtime_average_list']
-            # build_downtime_graph(best_downtime_average_list).show()
-            a.plot(best_downtime_average_list)
 
-            canvas = FigureCanvasTkAgg(f, self)
-            # canvas.show()
-            canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+            # создаем массив временных шагов для отображения интервалов симуляции на графике
+            time_list = []
+            for time_step_idx in range(int(sim.clock // sim.time_step)):
+                time_list.append(sim.time_step * time_step_idx)
 
-            toolbar = NavigationToolbar2Tk(canvas, self)
-            toolbar.update()
+            # подбиваем массивы значений для графика к одному размеру
+            if len(best_downtime_average_list) > len(time_list):
+                len_max = len(best_downtime_average_list)
+                list_max = best_downtime_average_list
+                len_min = len(time_list)
+            else:
+                len_max = len(time_list)
+                list_max = time_list
+                len_min = len(best_downtime_average_list)
 
-            canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            while len_max != len_min:
+                list_max.pop()
+                len_max = len(list_max)
+
+            print(len(best_downtime_average_list))
+            print(len(time_list))
+
+            # рисуем график функции простоя от времени симуляции
+            print_graph(frame, best_downtime_average_list, time_list)
 
             # TODO можно переделать вид вывозда лучшего результата, чтобы был в столбик
             # headers = list(best_res.columns.values)

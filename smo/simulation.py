@@ -1,5 +1,7 @@
 from operator import itemgetter
 
+import numpy as np
+
 
 class Simulation:
     """
@@ -165,7 +167,7 @@ class Simulation:
         # толкач занят
         pusher['busy'] = True
         # сбрасываем время работы
-        pusher['action_time'] = 0
+        pusher['action_time'] = 0.
         # указываем время окончания, учитывая износ толкача, время возврата
         # на станцию толкания и время ТО
         pusher['finish_time'] = self.clock + (self.t_to_depot * pusher['deterioration']) \
@@ -194,13 +196,11 @@ class Simulation:
                     # износ запихиваем в переменную
                     pusher_deterioration = pusher['deterioration']
 
-                    # TODO засунуть метод монтекарло сюда, чтобы сделать время толкания случайным в заданном диапазоне
                     # считаем время предстоящей работы
-                    # TODO здесь будем плюсовать весь общий путь с учетом износа - это будет нижняя граница интервала
-                    action_time = (self.t_hitch_detach + self.t_pushing + self.t_return) \
-                                  * pusher_deterioration
+                    action_time = self.generate_pushing_time(pusher_deterioration)
+
                     # время пути до депо
-                    time_to_depot = self.t_to_depot * pusher_deterioration
+                    time_to_depot = self.generate_return_to_depot(pusher_deterioration)
 
                     # если время работы превысит 72 часа, отправляем на ТО
                     if pusher['action_time'] + action_time + time_to_depot >= 72:
@@ -236,3 +236,31 @@ class Simulation:
 
             # симулируем протекание времени
             self.live()
+
+    def generate_pushing_time(self, pusher_deterioration):
+        # высчитываем фиксированное время толкания с учетом износа толкача
+        pushing_time_fix = (self.t_hitch_detach + self.t_pushing + self.t_return) * pusher_deterioration
+        # берем интервал случайных чисел погрешностью в +- 20 минут
+        # TODO мб поставить нижнюю границу фикс и верхнюю увеличить сильно
+        interval = [pushing_time_fix - 0.20, pushing_time_fix + 0.20]
+
+        # получаем случайное время толкания
+        pushing_time = (interval[1] - interval[0]) * np.random.random(1) + interval[0]
+
+        return pushing_time
+
+    def generate_return_to_depot(self, pusher_deterioration):
+        # высчитываем фиксированное время возвращения в депо с учетом износа толкача
+        return_to_depot_fix = self.t_to_depot * pusher_deterioration
+        # берем интервал случайных чисел погрешностью в +- 20 минут
+        interval = [return_to_depot_fix - 0.20, return_to_depot_fix + 0.20]
+
+        # получаем случайное время толкания
+        return_to_depot = (interval[1] - interval[0]) * np.random.random(1) + interval[0]
+
+        return return_to_depot
+
+    def reset_sim(self):
+        self.cost = 0.
+        self.clock = 0.
+        self.downtime_average_list = []

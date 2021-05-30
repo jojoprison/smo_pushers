@@ -1,27 +1,41 @@
-import matplotlib.pyplot as plt
-import numpy as np
+import tkinter as tk
 
-# x = [1, 5, 10, 15, 20]
-# y1 = [1, 7, 3, 5, 11]
-# y2 = [4, 3, 1, 8, 12]
-#
-# # plt.figure(figsize=(12, 7))
-#
-# plt.plot(x)
-#
-# # plt.plot(x, y1, 'o-r', alpha=0.7, label="first", lw=5, mec='b', mew=2, ms=10)
-# # plt.plot(x, y2, 'v-.g', label="second", mec='r', lw=2, mew=2, ms=12)
-# # plt.legend()
-# plt.grid(True)
-#
-# plt.show()
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
+matplotlib.use("TkAgg")
 
 
 def build_downtime_graph(downtime_average_list):
-
-    print(downtime_average_list)
 
     plt.plot(downtime_average_list)
     plt.grid(True)
 
     return plt
+
+
+def print_graph(parent_window, downtime_average_list, time_list):
+
+    figure = Figure(figsize=(8, 6), dpi=100)
+    subplot = figure.add_subplot(111)
+
+    # build_downtime_graph(downtime_average_list)
+
+    subplot.plot(time_list, downtime_average_list)
+    # plt.plot(x, y1, 'o-r', label="first", lw=5, mec='b', mew=2, ms=10)
+    # plt.plot(x, y2, 'v-.g', label="second", mec='r', lw=2, mew=2, ms=12)
+    subplot.legend()
+    subplot.grid(True)
+
+    new_window = tk.Toplevel(parent_window)
+    canvas = FigureCanvasTkAgg(figure, new_window)
+
+    canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+    toolbar = NavigationToolbar2Tk(canvas, new_window)
+    toolbar.update()
+
+    canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
