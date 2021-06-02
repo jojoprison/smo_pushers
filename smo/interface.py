@@ -1,15 +1,16 @@
-import matplotlib
-
-from smo.simulation import Simulation
 from tkinter import *
-import tkinter as tk
 from tkinter import ttk
-import smo.events_flow as flow
+
+import matplotlib
 from pandastable import Table
+
 import smo.data as data
-from smo.graph import build_downtime_graph, print_graph
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.figure import Figure
+import smo.events_flow as flow
+from smo.graph import print_graph
+from smo.simulation import Simulation
+from smo.exceptions import SimulationInputValueError
+
+import sys
 
 matplotlib.use("TkAgg")
 
@@ -120,94 +121,137 @@ class Interface:
 
         def btn_click():
             sim = Simulation()
-            sim.num_of_carriages = int(carriages_txt.get())
-            sim.carriage_downtime_price = int(carriage_price_txt.get())
-            sim.pusher_downtime_price = int(pusher_price_txt.get())
-            sim.pushing_price = int(pushing_price_txt.get())
-            # шаги симуляции теперь задаем статическим внутри класса и скроем ее с интерфейса
-            # sim.time_step = float(time_step_txt.get())
 
-            # генерируем поток случайных событий
-            events = flow.flow_init(int(intensity_txt.get()), int(flow_time_txt.get()))
+            try:
+                try:
+                    sim.num_of_carriages = int(carriages_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введено количество вагонов, введите число:{carriages_txt.get()}, введите число.')
 
-            num_of_pushers = int(pushers_txt.get())
-            result_list = [{'cost': 0., 'clock': 0., 'downtime_average': 0.}
-                           for _ in range(1, num_of_pushers + 1)]
+                try:
+                    sim.carriage_downtime_price = int(carriage_price_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введена стоимость простоя вагона: {carriage_price_txt.get()}, введите число.')
 
-            for pushers_inx in range(1, num_of_pushers + 1):
-                # обновляем данные времени, общих затрат и массива времени простоя для симулиции
-                sim.reset_sim()
-                # симулируем относительно пуассоновского потока событий и количества толкачей
-                sim.simulate(events, pushers_inx)
+                try:
+                    sim.pusher_downtime_price = int(pusher_price_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введена стоимость простоя толкача: {pusher_price_txt.get()}, введите число.')
 
-                result = result_list[pushers_inx - 1]
-                result['cost'] = sim.cost
-                result['clock'] = sim.clock
-                result['downtime_average_list'] = sim.downtime_average_list
+                try:
+                    sim.pushing_price = int(pushing_price_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введена стоимость толкания: {pushing_price_txt.get()}, введите число. ')
+                # шаги симуляции теперь задаем статическим внутри класса и скроем ее с интерфейса
+                # sim.time_step = float(time_step_txt.get())
 
-            dataframe = data.get_data(result_list, num_of_pushers)
+                # генерируем поток случайных событий
+                try:
+                    intensity = int(intensity_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введна интенсивнось потока: {intensity_txt.get()}, введите число.')
 
-            new_window = Toplevel(root)
-            frame = Frame(new_window)
-            frame.pack(fill='both', expand=True)
+                try:
+                    flow_time = int(flow_time_txt.get())
+                except ValueError:
+                    raise SimulationInputValueError(
+                        f'Неверно введено время наблюдения: {flow_time_txt.get()}, введите число.')
 
-            pt = Table(frame, dataframe=dataframe)
-            pt.show()
+                events = flow.flow_init(intensity, flow_time)
 
-            # получаем индекс строки с толкачей минимальными затратами
-            best_res_idx = dataframe['Суммарные затраты (руб)'].idxmin()
+                num_of_pushers = int(pushers_txt.get())
+                result_list = [{'cost': 0., 'clock': 0., 'downtime_average': 0.}
+                               for _ in range(1, num_of_pushers + 1)]
 
-            # выбираем строку из таблицы с лучшими результатами
-            best_res = dataframe.iloc[[best_res_idx]]
-            best_downtime_average_list = result_list[best_res_idx]['downtime_average_list']
+                for pushers_inx in range(1, num_of_pushers + 1):
+                    # обновляем данные времени, общих затрат и массива времени простоя для симулиции
+                    sim.reset_sim()
+                    # симулируем относительно пуассоновского потока событий и количества толкачей
+                    sim.simulate(events, pushers_inx)
 
-            # создаем массив временных шагов для отображения интервалов симуляции на графике
-            time_list = []
-            for time_step_idx in range(int(sim.clock // sim.time_step)):
-                time_list.append(sim.time_step * time_step_idx)
+                    result = result_list[pushers_inx - 1]
+                    result['cost'] = sim.cost
+                    result['clock'] = sim.clock
+                    result['downtime_average_list'] = sim.downtime_average_list
 
-            # подбиваем массивы значений для графика к одному размеру
-            if len(best_downtime_average_list) > len(time_list):
-                len_max = len(best_downtime_average_list)
-                list_max = best_downtime_average_list
-                len_min = len(time_list)
-            else:
-                len_max = len(time_list)
-                list_max = time_list
-                len_min = len(best_downtime_average_list)
+                dataframe = data.get_data(result_list, num_of_pushers)
 
-            while len_max != len_min:
-                list_max.pop()
-                len_max = len(list_max)
+                new_window = Toplevel(root)
+                frame = Frame(new_window)
+                frame.pack()
 
-            # рисуем график функции простоя от времени симуляции
-            print_graph(frame, best_downtime_average_list, time_list)
+                pt = Table(frame, dataframe=dataframe)
+                pt.show()
 
-            # TODO можно переделать вид вывозда лучшего результата, чтобы был в столбик
-            # headers = list(best_res.columns.values)
-            # print(headers)
-            # print(best_res.get_values())
+                # получаем индекс строки с толкачей минимальными затратами
+                best_res_idx = dataframe['Суммарные затраты (руб)'].idxmin()
 
-            # lol = best_res.to_csv(index=False).strip('\n').split('\n')
-            # df_string = '\r\n'.join(lol)  # <= this is the string that you can use with md5
-            # print(df_string)
+                # выбираем строку из таблицы с лучшими результатами
+                best_res = dataframe.iloc[[best_res_idx]]
+                best_downtime_average_list = result_list[best_res_idx]['downtime_average_list']
 
-            # lol = best_res.to_csv(index=False, sep='\n')
-            # print(type(lol))
+                # создаем массив временных шагов для отображения интервалов симуляции на графике
+                time_list = []
+                for time_step_idx in range(int(sim.clock // sim.time_step)):
+                    time_list.append(sim.time_step * time_step_idx)
 
-            best_res = best_res.to_string(index=False)
+                # подбиваем массивы значений для графика к одному размеру
+                if len(best_downtime_average_list) > len(time_list):
+                    len_max = len(best_downtime_average_list)
+                    list_max = best_downtime_average_list
+                    len_min = len(time_list)
+                else:
+                    len_max = len(time_list)
+                    list_max = time_list
+                    len_min = len(best_downtime_average_list)
 
-            # df_bytes = df_string.encode('utf8')  # <= this is bytes object to write the file
-            # print(df_bytes)
-            # print(best_res.to_string(index=False))
+                while len_max != len_min:
+                    list_max.pop()
+                    len_max = len(list_max)
 
-            res_str = 'ЛУЧШИЙ РЕЗУЛЬТАТ:\n' + best_res
+                # рисуем график функции простоя от времени симуляции
+                print_graph(frame, best_downtime_average_list, time_list)
 
-            result_lbl = ttk.Label(frame, text=res_str)
-            result_lbl.configure(font=1)
-            result_lbl.grid(column=1)
+                # TODO можно переделать вид вывозда лучшего результата, чтобы был в столбик
+                # headers = list(best_res.columns.values)
+                # print(headers)
+                # print(best_res.get_values())
 
-        btn = Button(root, text="Симулировать", command=btn_click)
+                # lol = best_res.to_csv(index=False).strip('\n').split('\n')
+                # df_string = '\r\n'.join(lol)
+                # print(df_string)
+
+                # lol = best_res.to_csv(index=False, sep='\n')
+                # print(type(lol))
+
+                best_res = best_res.to_string(index=False)
+
+                # df_bytes = df_string.encode('utf8')  # <= this is bytes object to write the file
+                # print(df_bytes)
+                # print(best_res.to_string(index=False))
+
+                res_str = 'ЛУЧШИЙ РЕЗУЛЬТАТ:\n' + best_res
+
+                result_lbl = ttk.Label(frame, text=res_str)
+                result_lbl.configure(font=1)
+                result_lbl.grid(column=1)
+            except SimulationInputValueError as ex:
+
+                new_window = Toplevel(root)
+                new_window.wm_geometry('600x100')
+                frame = Frame(new_window)
+                frame.pack(fill='both', expand=True)
+
+                error_lbl = ttk.Label(frame, text='ОШИБКА\n' + ex.__str__())
+                error_lbl.configure(font=1)
+                error_lbl.pack(fill='both', expand=True)
+
+        btn = Button(root, text='Симулировать', command=btn_click)
         btn.configure(font=1)
         btn.grid(column=2, row=3)
 

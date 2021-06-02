@@ -1,0 +1,2 @@
+class SimulationInputValueError(Exception):
+    pass
